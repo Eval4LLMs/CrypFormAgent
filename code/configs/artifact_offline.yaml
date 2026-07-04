@@ -1,0 +1,25 @@
+run:
+  mode: offline-reference
+  default_target: spdl
+  default_task: generation
+
+budget:
+  candidate_count: 1
+  repair_rounds: 1
+  max_model_calls: 1
+  max_verifier_calls: 2
+
+provider:
+  adapter: offline-reference
+  requires_api_key: false
+
+verifier:
+  adapter: offline-structural
+  requires_external_tools: false
+  timeout_seconds: 30
+
+report:
+  format: json
+  include_cryp_ir: true
+  include_scaffold: true
+  include_candidates: true

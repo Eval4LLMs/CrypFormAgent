@@ -1,0 +1,25 @@
+{
+  "name": "nonce_key_exchange",
+  "roles": ["A", "B"],
+  "terms": [
+    {"name": "na", "kind": "nonce", "owner": "A"},
+    {"name": "nb", "kind": "nonce", "owner": "B"},
+    {"name": "kab", "kind": "symmetric_key", "owner": "B"},
+    {"name": "ticket", "kind": "ciphertext", "owner": "B"}
+  ],
+  "messages": [
+    {"label": "m1", "sender": "A", "receiver": "B", "payload": ["A", "na"]},
+    {"label": "m2", "sender": "B", "receiver": "A", "payload": ["ticket", "nb"]},
+    {"label": "m3", "sender": "A", "receiver": "B", "payload": ["nb"]}
+  ],
+  "adversary_assumptions": ["active Dolev-Yao network adversary"],
+  "goals": [
+    {"kind": "secrecy", "target": "kab", "parties": ["A", "B"], "expected_verdict": "safe"},
+    {"kind": "authentication", "target": "B", "parties": ["A", "B"], "expected_verdict": "safe"}
+  ],
+  "source_language": "logic",
+  "metadata": {
+    "task": "generation",
+    "artifact_role": "smoke-test fixture"
+  }
+}

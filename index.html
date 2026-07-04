@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrypFormAgent - Results Dashboard</title>
+<meta name="description" content="CrypFormAgent results dashboard and supplementary task traces.">
+<style>
+:root{
+  --bg:#f7f8fb;
+  --surface:#ffffff;
+  --surface-2:#eef3f7;
+  --ink:#16202a;
+  --muted:#667085;
+  --line:#d9e1ea;
+  --blue:#2563eb;
+  --teal:#0f766e;
+  --coral:#c2410c;
+  --gold:#a16207;
+  --green:#15803d;
+  --shadow:0 8px 24px rgba(18,32,48,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.5}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800}
+.brand-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--teal));color:white;display:grid;place-items:center;font-size:13px;letter-spacing:.5px}
+.nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.nav-links a{font-size:14px;color:var(--ink);font-weight:650}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:white}
+.btn:hover{text-decoration:none;box-shadow:var(--shadow)}
+main{max-width:1180px;margin:0 auto;padding:28px 20px 56px}
+.hero{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:24px;align-items:center;margin-bottom:28px}
+.hero-copy h1{font-size:42px;line-height:1.08;margin:0 0 12px;letter-spacing:0}
+.hero-copy p{font-size:17px;color:var(--muted);margin:0 0 18px;max-width:760px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.media-panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;box-shadow:var(--shadow)}
+.media-panel img{display:block;width:100%;height:auto;border-radius:6px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:12px;margin:20px 0 34px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;box-shadow:var(--shadow);min-height:92px}
+.kpi strong{display:block;font-size:28px;line-height:1.1}
+.kpi span{display:block;color:var(--muted);font-size:13px;margin-top:6px}
+section{margin-top:34px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.section-head h2{font-size:24px;margin:0}
+.section-head p{margin:4px 0 0;color:var(--muted);max-width:780px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label.control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;font-weight:650}
+select{height:38px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:0 10px;font:inherit}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.panel-pad{padding:16px}
+.panel h3{margin:0 0 10px;font-size:17px}
+.panel p{margin:0;color:var(--muted)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#344054;background:#f0f4f8;white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;background:#e8eefc;color:#1d4ed8}
+.tag.teal{background:#ddf5f1;color:#0f766e}
+.tag.coral{background:#fff0e8;color:#c2410c}
+.score-cell{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.score-bar{width:86px;height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.score-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:999px}
+.callouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.callout{border-left:4px solid var(--blue);background:var(--surface);border-radius:8px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px;box-shadow:var(--shadow)}
+.callout:nth-child(2){border-left-color:var(--teal)}
+.callout:nth-child(3){border-left-color:var(--coral)}
+.callout strong{display:block;margin-bottom:6px}
+.radar-layout{display:grid;grid-template-columns:minmax(280px,440px) minmax(0,1fr);gap:14px;align-items:stretch}
+.radar-canvas-wrap{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px;display:grid;place-items:center;min-height:360px}
+.radar-canvas-wrap canvas{display:block;width:100%;max-width:420px;aspect-ratio:1}
+.radar-summary h3{margin-bottom:4px}
+.radar-bars{display:grid;gap:10px;margin-top:14px}
+.radar-bar{display:grid;grid-template-columns:128px minmax(80px,1fr) 48px;gap:10px;align-items:center;font-size:14px}
+.radar-bar span:first-child{color:var(--muted);font-weight:700}
+.radar-bar strong{text-align:right;font-variant-numeric:tabular-nums}
+.radar-meter{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.radar-meter i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:999px}
+.artifact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.figure{margin:0}
+.figure img{display:block;width:100%;border-radius:8px;border:1px solid var(--line);background:white}
+.figure figcaption{color:var(--muted);font-size:13px;margin-top:8px}
+.trace{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:16px}
+.trace-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.trace-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.trace-controls label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:13px;font-weight:700}
+.trace-toast{min-height:20px;color:var(--teal);font-size:13px;margin-top:8px}
+.trace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.trace-card{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fbfcfe}
+.trace-card header{padding:10px 12px;background:#eef3f7;border-bottom:1px solid var(--line);font-weight:800}
+.trace-card small{color:var(--muted);font-weight:650}
+pre{margin:0;padding:12px;max-height:320px;overflow:auto;background:#111827;color:#e5e7eb}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;white-space:pre-wrap;word-break:break-word}
+.file-line{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}
+.video-box{background:#111827;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.video-box video{display:block;width:100%;aspect-ratio:16/9;background:#111827}
+footer{border-top:1px solid var(--line);background:white;color:var(--muted);padding:22px 20px;text-align:center}
+@media(max-width:900px){
+  .hero,.artifact-grid,.grid-2,.radar-layout{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .callouts,.trace-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .nav{align-items:flex-start;flex-direction:column}
+  .hero-copy h1{font-size:32px}
+  .kpis{grid-template-columns:1fr}
+  main{padding-left:14px;padding-right:14px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="nav">
+    <div class="brand">
+      <div class="brand-mark">CFA</div>
+      <div>CrypFormAgent</div>
+    </div>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#results">Results</a>
+      <a href="#radar">Radar</a>
+      <a href="#ablation">Ablation</a>
+      <a href="#budget">Budgets</a>
+      <a href="#trace-viewer">Task Traces</a>
+      <a href="#code">Public Code</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="overview">
+    <div class="hero-copy">
+      <h1>CrypFormAgent Results Dashboard</h1>
+      <p>
+        Semantics-constrained and verifier-guided formalization for
+        cryptographic scheme analysis. This dashboard summarizes the paper
+        results and exposes task-level traces for inspection.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#results">View Results</a>
+        <a class="btn" href="#trace-viewer">Inspect Traces</a>
+        <a class="btn" href="#demo-video">Benchmark Viewer</a>
+      </div>
+    </div>
+    <figure class="media-panel">
+      <img src="overview.png" alt="CrypFormAgent overview">
+    </figure>
+  </section>
+
+  <div class="kpis" aria-label="Dataset summary">
+    <div class="kpi"><strong>700</strong><span>Formal instances</span></div>
+    <div class="kpi"><strong>677</strong><span>Distinct schemes</span></div>
+    <div class="kpi"><strong>7</strong><span>Formal languages</span></div>
+    <div class="kpi"><strong>160</strong><span>Security properties</span></div>
+    <div class="kpi"><strong>5</strong><span>Task interfaces</span></div>
+  </div>
+
+  <section class="callouts" aria-label="Key findings">
+    <article class="callout">
+      <strong>Direct LLMs remain brittle.</strong>
+      Interpretation and completion are stronger, but generation and
+      transformation often fail at verifier-facing requirements.
+    </article>
+    <article class="callout">
+      <strong>CrypFormAgent improves backbones.</strong>
+      Overall score rises from 60.9 to 77.9 on GPT-5.5, from 55.0 to 74.8 on
+      GPT-5.4, and from 47.6 to 69.1 on DeepSeek-V4-Pro.
+    </article>
+    <article class="callout">
+      <strong>Gains are not just more attempts.</strong>
+      Budget-controlled baselines improve over Direct@1, but full
+      CrypFormAgent remains best.
+    </article>
+  </section>
+
+  <section id="results">
+    <div class="section-head">
+      <div>
+        <h2>Direct Baselines and CrypFormAgent</h2>
+        <p>Scores are from the paper's five-capability evaluation. Higher is better.</p>
+      </div>
+      <div class="controls">
+        <label class="control">Sort by
+          <select id="model-sort">
+            <option value="overall">Overall</option>
+            <option value="generate">Generation</option>
+            <option value="complete">Completion</option>
+            <option value="correction">Correction</option>
+            <option value="transform">Transformation</option>
+            <option value="interpret">Interpretation</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>Group</th>
+            <th>Generation</th>
+            <th>Completion</th>
+            <th>Correction</th>
+            <th>Transformation</th>
+            <th>Interpretation</th>
+            <th>Overall</th>
+          </tr>
+        </thead>
+        <tbody id="model-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="radar">
+    <div class="section-head">
+      <div>
+        <h2>Capability Radar</h2>
+        <p>Per-capability profile for direct baselines and CrypFormAgent-backed systems.</p>
+      </div>
+      <div class="controls">
+        <label class="control">Model
+          <select id="radar-model"></select>
+        </label>
+      </div>
+    </div>
+    <div class="radar-layout">
+      <div class="radar-canvas-wrap">
+        <canvas id="capability-radar" width="420" height="420" aria-label="Capability radar chart"></canvas>
+      </div>
+      <div class="panel panel-pad radar-summary">
+        <h3 id="radar-title">C.F.A-GPT-5.5</h3>
+        <p id="radar-caption">Capability scores across the five task interfaces.</p>
+        <div id="radar-bars" class="radar-bars"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ablation">
+    <div class="section-head">
+      <div>
+        <h2>Ablation Study</h2>
+        <p>C.F.A-GPT-5.5 with one module removed at a time.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Variant</th>
+            <th>Overall</th>
+            <th>Generation</th>
+            <th>Completion</th>
+            <th>Correction</th>
+            <th>Transformation</th>
+            <th>Interpretation</th>
+          </tr>
+        </thead>
+        <tbody id="ablation-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="budget">
+    <div class="section-head">
+      <div>
+        <h2>Budget-Controlled Comparison and Overhead</h2>
+        <p>DeepSeek-V4-Pro comparison under matched candidate and repair budgets.</p>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Overall</th>
+              <th>Generation</th>
+              <th>Correction</th>
+              <th>Transformation</th>
+              <th>Trans. timeout</th>
+            </tr>
+          </thead>
+          <tbody id="budget-table"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>LLM calls</th>
+              <th>Verifier calls</th>
+              <th>Repair iters</th>
+              <th>Wall time (s)</th>
+              <th>Store (MB)</th>
+              <th>Size (KB)</th>
+              <th>VTime (s)</th>
+            </tr>
+          </thead>
+          <tbody id="overhead-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="artifacts">
+    <div class="section-head">
+      <div>
+        <h2>Supplementary Figures</h2>
+        <p>Coverage and robustness assets included with the public artifact.</p>
+      </div>
+    </div>
+    <div class="artifact-grid">
+      <figure class="figure">
+        <img src="motivation.png" alt="CrypFormAgent motivation">
+        <figcaption>Motivation and problem landscape.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="scoring/rank_heatmap.png" alt="Rank robustness heatmap">
+        <figcaption>Rank robustness under alternative scoring configurations.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="trace-viewer">
+    <div class="trace">
+      <div class="trace-head">
+        <div>
+          <h2>CrypFormAgent Task Trace Viewer</h2>
+          <p>Inspect released task traces by task, language, and model.</p>
+        </div>
+        <div class="trace-controls">
+          <label>Task
+            <select id="trace-task"></select>
+          </label>
+          <label>Language
+            <select id="trace-lang"></select>
+          </label>
+          <label>Model
+            <select id="trace-model"></select>
+          </label>
+          <button id="trace-reload" class="btn" type="button">Reload</button>
+        </div>
+      </div>
+      <div id="trace-toast" class="trace-toast" aria-live="polite"></div>
+      <div class="trace-grid">
+        <article class="trace-card">
+          <header>1. Dataset Content <small>inputdata</small></header>
+          <div class="file-line">File: <span id="trace-file">-</span></div>
+          <pre><code id="trace-inputdata">-</code></pre>
+        </article>
+        <article class="trace-card">
+          <header>2. Prompt <small>prompt</small></header>
+          <pre><code id="trace-prompt">-</code></pre>
+        </article>
+        <article class="trace-card">
+          <header>3. Model Input <small>modelinput</small></header>
+          <pre><code id="trace-modelinput">-</code></pre>
+        </article>
+        <article class="trace-card">
+          <header>4. Model Output <small>modeloutput</small></header>
+          <pre><code id="trace-modeloutput">-</code></pre>
+        </article>
+        <article class="trace-card">
+          <header>5. Evaluation Result <small>evalresult</small></header>
+          <pre><code id="trace-evalresult">-</code></pre>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="code">
+    <div class="section-head">
+      <div>
+        <h2>Reference Implementation</h2>
+        <p>The released code provides an executable offline reference pipeline for the CrypFormAgent interfaces.</p>
+      </div>
+    </div>
+    <div class="panel panel-pad">
+      <h3>Run the reference pipeline</h3>
+      <pre><code>cd code
+python3 -m crypformagent run --input examples/minimal_generation.json --target spdl</code></pre>
+    </div>
+  </section>
+
+  <section id="demo-video">
+    <div class="section-head">
+      <div>
+        <h2>Generation Demo Video</h2>
+        <p>Released demo video for automatic validation on the generation task.</p>
+      </div>
+    </div>
+    <div class="video-box">
+      <video controls preload="metadata">
+        <source src="./html/generation_grok-3.mp4" type="video/mp4">
+        Your browser does not support embedded video.
+      </video>
+    </div>
+  </section>
+</main>
+
+<footer>
+  &copy; 2026 CrypFormAgent. Public supplementary artifact.
+</footer>
+
+<script>
+window.CFA_DATA = {
+  models: [
+    {name:"GLM-4", group:"Direct", generate:0.0, complete:22.8, correction:14.5, transform:0.0, interpret:62.3, overall:16.1},
+    {name:"LLaMA4-Instruct", group:"Direct", generate:5.8, complete:55.6, correction:57.2, transform:0.0, interpret:44.4, overall:27.8},
+    {name:"DeepSeek-Coder", group:"Direct", generate:5.8, complete:68.0, correction:63.9, transform:0.0, interpret:93.2, overall:38.6},
+    {name:"DeepSeek-R1", group:"Direct", generate:5.8, complete:65.2, correction:56.9, transform:0.0, interpret:77.4, overall:34.6},
+    {name:"DeepSeek-V4-Pro", group:"Direct", generate:21.6, complete:71.9, correction:73.6, transform:14.9, interpret:87.0, overall:47.6},
+    {name:"GPT-4o-mini", group:"Direct", generate:0.0, complete:10.9, correction:44.8, transform:0.0, interpret:93.8, overall:23.0},
+    {name:"Gemini-2.5-Pro", group:"Direct", generate:7.7, complete:25.9, correction:35.6, transform:0.0, interpret:69.1, overall:22.8},
+    {name:"GPT-4o", group:"Direct", generate:9.5, complete:51.5, correction:54.7, transform:0.0, interpret:94.1, overall:35.0},
+    {name:"Claude-3.5-Sonnet-Coder", group:"Direct", generate:24.2, complete:74.4, correction:71.2, transform:13.3, interpret:91.7, overall:48.7},
+    {name:"Grok-3", group:"Direct", generate:12.8, complete:36.7, correction:0.0, transform:0.0, interpret:49.6, overall:18.0},
+    {name:"GPT-5.1", group:"Direct", generate:6.0, complete:76.0, correction:69.0, transform:0.0, interpret:81.0, overall:39.2},
+    {name:"GPT-5.4", group:"Direct", generate:40.9, complete:61.2, correction:76.7, transform:34.5, interpret:82.6, overall:55.0},
+    {name:"GPT-5.5", group:"Direct", generate:57.4, complete:71.1, correction:74.1, transform:36.7, interpret:80.3, overall:60.9},
+    {name:"C.F.A-DeepSeek-V4-Pro", group:"CrypFormAgent", generate:67.5, complete:82.6, correction:79.7, transform:42.3, interpret:88.2, overall:69.1},
+    {name:"C.F.A-GPT-5.4", group:"CrypFormAgent", generate:75.6, complete:92.1, correction:80.2, transform:47.1, interpret:91.0, overall:74.8},
+    {name:"C.F.A-GPT-5.5", group:"CrypFormAgent", generate:81.4, complete:94.3, correction:83.4, transform:48.1, interpret:94.1, overall:77.9}
+  ],
+  ablation: [
+    {name:"C.F.A-GPT-5.5", overall:77.86, generate:81.35, complete:94.30, correction:83.40, transform:48.14, interpret:94.14},
+    {name:"w/o LLM-assisted review", overall:74.30, generate:75.53, complete:91.70, correction:77.29, transform:47.55, interpret:90.65},
+    {name:"w/o budgeted ranking", overall:73.11, generate:72.28, complete:88.49, correction:79.36, transform:47.28, interpret:90.78},
+    {name:"w/o typed repair", overall:72.32, generate:73.02, complete:88.10, correction:77.87, transform:45.96, interpret:88.52},
+    {name:"w/o consistency checking", overall:67.10, generate:60.64, complete:80.97, correction:81.37, transform:43.59, interpret:84.29},
+    {name:"w/o CrypIR", overall:66.47, generate:60.25, complete:77.15, correction:83.02, transform:42.96, interpret:85.24},
+    {name:"w/o deterministic lowering", overall:58.63, generate:66.39, complete:85.01, correction:79.83, transform:0.00, interpret:87.02}
+  ],
+  budget: [
+    {name:"Direct@1", overall:47.59, generate:21.63, correction:73.58, transform:14.90, timeout:"8.0%"},
+    {name:"Pass@K", overall:57.28, generate:45.53, correction:76.77, transform:35.47, timeout:"3.0%"},
+    {name:"Verifier-Rerank@K", overall:62.95, generate:50.65, correction:83.25, transform:39.45, timeout:"2.0%"},
+    {name:"Verifier-Feedback Repair@K", overall:63.37, generate:54.61, correction:79.72, transform:42.33, timeout:"2.0%"},
+    {name:"Verifier-Repair + Ranking", overall:65.39, generate:51.29, correction:87.10, transform:36.09, timeout:"3.0%"},
+    {name:"Full CrypFormAgent", overall:69.14, generate:67.47, correction:79.71, transform:42.27, timeout:"2.0%"}
+  ],
+  overhead: [
+    {name:"Direct@1", llm:1.00, verifier:1.00, repair:0.00, wall:18.6, store:0.4, size:12.8, vtime:21.4},
+    {name:"Pass@K", llm:3.00, verifier:1.00, repair:0.00, wall:48.9, store:0.9, size:13.5, vtime:22.1},
+    {name:"Verifier-Rerank@K", llm:3.00, verifier:3.00, repair:0.00, wall:71.3, store:1.3, size:13.7, vtime:22.6},
+    {name:"Verifier-Repair@K", llm:4.78, verifier:4.31, repair:1.31, wall:112.7, store:2.8, size:14.9, vtime:23.8},
+    {name:"CrypFormAgent", llm:5.26, verifier:4.58, repair:1.42, wall:126.4, store:3.4, size:15.3, vtime:24.1}
+  ]
+};
+
+function fmt(value){
+  return typeof value === "number" ? value.toFixed(1) : value;
+}
+
+function scoreCell(value){
+  const width = Math.max(0, Math.min(100, value));
+  return '<div class="score-cell"><span>' + fmt(value) + '</span><span class="score-bar"><i style="width:' + width + '%"></i></span></div>';
+}
+
+function groupTag(group){
+  const klass = group === "CrypFormAgent" ? "tag teal" : "tag";
+  return '<span class="' + klass + '">' + group + '</span>';
+}
+
+function renderModelTable(){
+  const sortKey = document.getElementById("model-sort").value;
+  const rows = window.CFA_DATA.models.slice().sort((a,b) => b[sortKey] - a[sortKey]);
+  document.getElementById("model-table").innerHTML = rows.map(item => (
+    '<tr>' +
+      '<td><strong>' + item.name + '</strong></td>' +
+      '<td>' + groupTag(item.group) + '</td>' +
+      '<td class="num">' + fmt(item.generate) + '</td>' +
+      '<td class="num">' + fmt(item.complete) + '</td>' +
+      '<td class="num">' + fmt(item.correction) + '</td>' +
+      '<td class="num">' + fmt(item.transform) + '</td>' +
+      '<td class="num">' + fmt(item.interpret) + '</td>' +
+      '<td class="num">' + scoreCell(item.overall) + '</td>' +
+    '</tr>'
+  )).join("");
+}
+
+function renderSimpleTable(target, rows, keys){
+  document.getElementById(target).innerHTML = rows.map(item => (
+    '<tr><td><strong>' + item.name + '</strong></td>' +
+    keys.map(key => '<td class="num">' + fmt(item[key]) + '</td>').join("") +
+    '</tr>'
+  )).join("");
+}
+
+const RADAR_AXES = [
+  {key:"generate", label:"Generation"},
+  {key:"complete", label:"Completion"},
+  {key:"correction", label:"Correction"},
+  {key:"transform", label:"Transformation"},
+  {key:"interpret", label:"Interpretation"}
+];
+
+function setupRadar(){
+  const selector = document.getElementById("radar-model");
+  if (!selector) return;
+  selector.innerHTML = window.CFA_DATA.models.map(item => (
+    '<option value="' + item.name + '">' + item.name + '</option>'
+  )).join("");
+  selector.value = "C.F.A-GPT-5.5";
+  selector.addEventListener("change", renderRadar);
+  window.addEventListener("resize", () => window.requestAnimationFrame(renderRadar));
+  renderRadar();
+}
+
+function currentRadarModel(){
+  const selector = document.getElementById("radar-model");
+  return window.CFA_DATA.models.find(item => item.name === selector.value) || window.CFA_DATA.models[0];
+}
+
+function renderRadar(){
+  const model = currentRadarModel();
+  const title = document.getElementById("radar-title");
+  const caption = document.getElementById("radar-caption");
+  const bars = document.getElementById("radar-bars");
+  title.textContent = model.name;
+  caption.textContent = model.group + " system, overall score " + fmt(model.overall) + ".";
+  bars.innerHTML = RADAR_AXES.map(axis => {
+    const value = Math.max(0, Math.min(100, model[axis.key]));
+    return '<div class="radar-bar">' +
+      '<span>' + axis.label + '</span>' +
+      '<span class="radar-meter"><i style="width:' + value + '%"></i></span>' +
+      '<strong>' + fmt(model[axis.key]) + '</strong>' +
+    '</div>';
+  }).join("");
+  drawCapabilityRadar(model);
+}
+
+function drawCapabilityRadar(model){
+  const canvas = document.getElementById("capability-radar");
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const size = Math.max(320, Math.min(420, rect.width || 420));
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+
+  const center = size / 2;
+  const radius = size * 0.30;
+  const labelRadius = radius + 46;
+  const sides = RADAR_AXES.length;
+  const color = model.group === "CrypFormAgent" ? "#0f766e" : "#2563eb";
+  const fill = model.group === "CrypFormAgent" ? "rgba(15,118,110,.18)" : "rgba(37,99,235,.16)";
+
+  function point(index, valueRadius){
+    const angle = -Math.PI / 2 + index * Math.PI * 2 / sides;
+    return {
+      x: center + Math.cos(angle) * valueRadius,
+      y: center + Math.sin(angle) * valueRadius
+    };
+  }
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#d9e1ea";
+  [0.2, 0.4, 0.6, 0.8, 1].forEach(scale => {
+    ctx.beginPath();
+    RADAR_AXES.forEach((axis, index) => {
+      const p = point(index, radius * scale);
+      if (index === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  });
+
+  ctx.strokeStyle = "#e5ebf1";
+  RADAR_AXES.forEach((axis, index) => {
+    const p = point(index, radius);
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = "#344054";
+  ctx.font = "12px Inter, Arial, sans-serif";
+  RADAR_AXES.forEach((axis, index) => {
+    const p = point(index, labelRadius);
+    let x = p.x;
+    if (x < center - 10) x = Math.max(108, x);
+    if (x > center + 10) x = Math.min(size - 108, x);
+    ctx.textAlign = Math.abs(x - center) < 8 ? "center" : (x < center ? "right" : "left");
+    ctx.textBaseline = p.y < center - 20 ? "bottom" : (p.y > center + 20 ? "top" : "middle");
+    ctx.fillText(axis.label, x, p.y);
+  });
+
+  const polygon = RADAR_AXES.map((axis, index) => point(index, radius * Math.max(0, Math.min(100, model[axis.key])) / 100));
+  ctx.beginPath();
+  polygon.forEach((p, index) => {
+    if (index === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  polygon.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.fillStyle = "#667085";
+  ctx.font = "11px Inter, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("100", center, center - radius - 14);
+}
+
+document.getElementById("model-sort").addEventListener("change", renderModelTable);
+renderModelTable();
+renderSimpleTable("ablation-table", window.CFA_DATA.ablation, ["overall","generate","complete","correction","transform","interpret"]);
+renderSimpleTable("budget-table", window.CFA_DATA.budget, ["overall","generate","correction","transform","timeout"]);
+renderSimpleTable("overhead-table", window.CFA_DATA.overhead, ["llm","verifier","repair","wall","store","size","vtime"]);
+setupRadar();
+</script>
+
+<script>
+(function(){
+  const BASE_PATH = "./html/";
+  const TASK_FILES = {
+    generation: "generation.json",
+    completion: "completion.json",
+    transformation: "translation.json",
+    interpretation_logic: "interpretation_logic.json",
+    interpretation_notation: "interpretation_notation.json",
+    correction_false: "correction_false.json",
+    correction_error: "correction_error.json"
+  };
+  const DEFAULTS = {task:"generation", lang:"hlpsl", model:"C.F.A-GPT-5.5"};
+  const els = {
+    task: document.getElementById("trace-task"),
+    lang: document.getElementById("trace-lang"),
+    model: document.getElementById("trace-model"),
+    reload: document.getElementById("trace-reload"),
+    toast: document.getElementById("trace-toast"),
+    file: document.getElementById("trace-file"),
+    inputdata: document.getElementById("trace-inputdata"),
+    prompt: document.getElementById("trace-prompt"),
+    modelinput: document.getElementById("trace-modelinput"),
+    modeloutput: document.getElementById("trace-modeloutput"),
+    evalresult: document.getElementById("trace-evalresult")
+  };
+  const state = {datasets:{}, task:DEFAULTS.task, lang:DEFAULTS.lang, model:DEFAULTS.model};
+
+  function isRecord(value){
+    return value && typeof value === "object" && !Array.isArray(value) &&
+      ("filename" in value || "inputdata" in value || "prompt" in value ||
+       "modelinput" in value || "modeloutput" in value || "evalresult" in value);
+  }
+
+  function looksLikeLangMap(node){
+    if (!node || typeof node !== "object" || Array.isArray(node)) return false;
+    return Object.keys(node).some(lang => {
+      const models = node[lang];
+      if (!models || typeof models !== "object" || Array.isArray(models)) return false;
+      return Object.keys(models).some(model => isRecord(models[model]));
+    });
+  }
+
+  function unwrapToLangMap(json){
+    let node = json;
+    let guard = 0;
+    while (guard < 6 && node && typeof node === "object" && !Array.isArray(node) && Object.keys(node).length === 1){
+      const next = node[Object.keys(node)[0]];
+      if (!next || typeof next !== "object") break;
+      node = next;
+      guard += 1;
+      if (looksLikeLangMap(node)) break;
+    }
+    return looksLikeLangMap(node) ? node : json;
+  }
+
+  function pretty(value){
+    if (value == null) return "-";
+    if (typeof value === "string") {
+      try { return JSON.stringify(JSON.parse(value), null, 2); }
+      catch (error) { return value; }
+    }
+    try { return JSON.stringify(value, null, 2); }
+    catch (error) { return String(value); }
+  }
+
+  function toast(message){
+    els.toast.textContent = message || "";
+  }
+
+  async function fetchJson(path){
+    const response = await fetch(path, {cache:"no-store"});
+    if (!response.ok) throw new Error(path + " returned HTTP " + response.status);
+    return response.json();
+  }
+
+  async function loadAll(){
+    const entries = Object.entries(TASK_FILES);
+    const results = await Promise.allSettled(entries.map(entry => fetchJson(BASE_PATH + entry[1])));
+    const loaded = {};
+    const ok = [];
+    const missing = [];
+    results.forEach((result, index) => {
+      const task = entries[index][0];
+      if (result.status === "fulfilled") {
+        loaded[task] = unwrapToLangMap(result.value);
+        ok.push(task);
+      } else {
+        missing.push(task);
+      }
+    });
+    state.datasets = loaded;
+    els.task.innerHTML = ok.map(task => '<option value="' + task + '">' + task + '</option>').join("");
+    state.task = ok.includes(state.task) ? state.task : ok[0];
+    els.task.value = state.task;
+    if (missing.length) toast("Missing traces: " + missing.join(", "));
+  }
+
+  function populateSelectors(){
+    const langMap = state.datasets[state.task] || {};
+    const langs = Object.keys(langMap);
+    if (!langs.includes(state.lang)) state.lang = langs[0] || "";
+    els.lang.innerHTML = langs.map(lang => '<option value="' + lang + '">' + lang + '</option>').join("");
+    els.lang.value = state.lang;
+
+    const models = Object.keys(langMap[state.lang] || {});
+    if (!models.includes(state.model)) state.model = models[0] || "";
+    els.model.innerHTML = models.map(model => '<option value="' + model + '">' + model + '</option>').join("");
+    els.model.value = state.model;
+  }
+
+  function renderTrace(){
+    const langMap = state.datasets[state.task] || {};
+    const record = ((langMap[state.lang] || {})[state.model]) || {};
+    els.file.textContent = record.filename || "-";
+    els.inputdata.textContent = pretty(record.inputdata);
+    els.prompt.textContent = pretty(record.prompt);
+    els.modelinput.textContent = pretty(record.modelinput);
+    els.modeloutput.textContent = pretty(record.modeloutput);
+    els.evalresult.textContent = pretty(record.evalresult);
+  }
+
+  async function boot(){
+    try {
+      await loadAll();
+      populateSelectors();
+      renderTrace();
+      if (!els.toast.textContent) toast("Loaded " + state.task + " / " + state.lang + " / " + state.model + ".");
+    } catch (error) {
+      console.error(error);
+      toast("Unable to load task traces. Serve the supplement directory over HTTP.");
+    }
+  }
+
+  els.task.addEventListener("change", () => {
+    state.task = els.task.value;
+    populateSelectors();
+    renderTrace();
+  });
+  els.lang.addEventListener("change", () => {
+    state.lang = els.lang.value;
+    populateSelectors();
+    renderTrace();
+  });
+  els.model.addEventListener("change", () => {
+    state.model = els.model.value;
+    renderTrace();
+  });
+  els.reload.addEventListener("click", async () => {
+    toast("Reloading traces...");
+    await loadAll();
+    populateSelectors();
+    renderTrace();
+    toast("Reloaded " + state.task + " / " + state.lang + " / " + state.model + ".");
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>
